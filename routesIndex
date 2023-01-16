@@ -61,7 +61,7 @@ router.get("/motoristas/nomes", async (req: Request, res: Response) => {
 
 
 //ROMANEIOS
-router.get("/romaneios", async (req: Request, res: Response) => {
+/*router.get("/romaneios", async (req: Request, res: Response) => {
     try {
         const result = await prisma.romaneio.findMany({
             include: { 
@@ -82,10 +82,11 @@ router.get("/romaneios", async (req: Request, res: Response) => {
         console.log(e);
         return false;
     }
-});
+});*/
 
-router.get("/romaneios/:motorista", async (req: Request, res: Response) => {
+router.get("/romaneios", async (req: Request, res: Response) => {
     try {
+        const { motorista, conferido, separado, finalizado } = req.query;
         const result = await prisma.romaneio.findMany({
             include: { 
                 motorista: true, 
@@ -95,16 +96,21 @@ router.get("/romaneios/:motorista", async (req: Request, res: Response) => {
                     }
                 } 
             },
-            where: {
-                motorista: {
-                    nome: {
-                        contains: req.params.motorista
-                    }
-                }
+            where: {    
+                OR: [{
+                    motorista: {
+                        nome: {
+                            contains: motorista?.toString()
+                        }
+                    },
+                    conferido: { contains: conferido?.toString() },
+                    separado: { contains: separado?.toString() },
+                    finalizado: { contains: finalizado?.toString() }
+                }]
             }
         });
 
-        console.log(result);
+        console.log("finalizado ",req.params.finalizado);
         res.status(200).json(result);
         return result;
     }
