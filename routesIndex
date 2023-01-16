@@ -1,0 +1,143 @@
+import { prisma } from "../database";
+import {Router, Response, Request} from "express";
+
+export const router = Router();
+
+router.post("/motorista", async (req: Request, res: Response) => {
+    const {body} = req;
+
+    const motoristaAlreadyExists = await prisma.motorista.findMany({
+        where: {matricula: body.matricula},
+    });
+
+    if(motoristaAlreadyExists) return res.status(400).json({message: "Matricula já existente."});
+
+    try {
+        await prisma.motorista.create({
+            data: {
+                nome: body.nome,
+                matricula: body.matricula
+            }
+        })
+    }
+    catch(e){
+        console.log(e);
+        return false;
+    }
+});
+
+//MOTORISTAS
+
+router.get("/motoristas", async (req: Request, res: Response) => {
+    try {
+        const result = await prisma.motorista.findMany({});
+        //exemplo de captação de nomes dos motoristas
+        const nomesDosMotoristas = result.map((n) => n.nome);
+
+        console.log(result);
+        res.status(200).json(result);
+        return result;
+    }
+    catch(e){
+        console.log(e);
+        return false;
+    }
+});
+
+router.get("/motoristas/nomes", async (req: Request, res: Response) => {
+    try {
+        const result = await prisma.motorista.findMany({});
+        const nomesDosMotoristas = result.map((n) => n.nome);
+
+        console.log(nomesDosMotoristas);
+        res.status(200).json(nomesDosMotoristas);
+        return result;
+    }
+    catch(e){
+        console.log(e);
+        return false;
+    }
+});
+
+
+//ROMANEIOS
+router.get("/romaneios", async (req: Request, res: Response) => {
+    try {
+        const result = await prisma.romaneio.findMany({
+            include: { 
+                motorista: true, 
+                entrega: {
+                    include: {
+                        pa: true
+                    }
+                } 
+            },
+        });
+
+        console.log(result);
+        res.status(200).json(result);
+        return result;
+    }
+    catch(e){
+        console.log(e);
+        return false;
+    }
+});
+
+router.get("/romaneios/:motorista", async (req: Request, res: Response) => {
+    try {
+        const result = await prisma.romaneio.findMany({
+            include: { 
+                motorista: true, 
+                entrega: {
+                    include: {
+                        pa: true
+                    }
+                } 
+            },
+            where: {
+                motorista: {
+                    nome: {
+                        contains: req.params.motorista
+                    }
+                }
+            }
+        });
+
+        console.log(result);
+        res.status(200).json(result);
+        return result;
+    }
+    catch(e){
+        console.log(e);
+        return false;
+    }
+});
+
+//ROMANEIOS
+router.get("/entregas", async (req: Request, res: Response) => {
+    try {
+        const result = await prisma.entrega.findMany({
+            include: { 
+                pa: true, 
+                romaneio: {
+                    include: {
+                        motorista: true
+                    }
+                } 
+            },
+        });
+
+        console.log(result);
+        res.status(200).json(result);
+        return result;
+    }
+    catch(e){
+        console.log(e);
+        return false;
+    }
+});
+
+router.get('/', (req: Request, res: Response) => {
+    res.status(200).send('Apontado');
+})
